@@ -3,6 +3,8 @@
 **An open-source game to learn venture capital by negotiating it.**
 Squads of founders and investors take one startup, Flussi Energy, from a pre-seed SAFE to a Series A and an exit. Every term they sign becomes the starting point of the next round, so the cap table, the dilution and the exit value are the consequence of their own deals.
 
+**Live: [babyvc-dealroom.github.io](https://babyvc-dealroom.github.io)**
+
 [Italiano](README.it.md) | MIT (code) | CC BY-SA 4.0 (public learning content)
 
 ## Why
