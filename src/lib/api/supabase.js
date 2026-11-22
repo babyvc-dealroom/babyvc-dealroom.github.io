@@ -27,6 +27,8 @@ export const api = {
     const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
     if (error) {
       const m = error.message || '';
+      // The email rate limit only bites when the project still sends confirmation emails.
+      if (error.code === 'over_email_send_rate_limit' || /email rate limit/i.test(m)) throw new Error('CONFIRM_EMAIL_ON');
       throw new Error(error.status === 429 || /rate limit/i.test(m) ? 'SIGNUP_LIMIT' : /registered|exists/i.test(m) ? 'EMAIL_TAKEN'
         : /password/i.test(m) ? 'WEAK_PASSWORD' : /disabled|not allowed/i.test(m) ? 'SIGNUP_CLOSED' : m);
     }

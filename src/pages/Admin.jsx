@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLang } from '../lib/i18n.jsx';
 import { api } from '../lib/api/index.js';
 import { ROUNDS, SQUAD_NAMES } from '../content/public.js';
-import { DEFAULT_MINUTES, PHASE_LABEL } from '../lib/phases.js';
+import { DEFAULT_MINUTES, PHASE_LABEL, sessionMinutes, fitMinutes, fmtMinutes } from '../lib/phases.js';
 import Shell, { Loading } from '../components/Shell.jsx';
 import Icon from '../components/Icon.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
@@ -122,7 +122,9 @@ function CreateGame({ onCreated }) {
   const [min, setMin] = useState(DEFAULT_MINUTES);
   const [names, setNames] = useState(() => pickNames(20));
   const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
-  const total = min.brief + min.negotiate + min.sign + min.debrief;
+  const perRound = min.brief + min.negotiate + min.sign + min.debrief;
+  const total = sessionMinutes(rounds, min);
+  const endsAt = new Date(Date.now() + total * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const go = async () => {
     setBusy(true); setErr('');
     try { const id = await api.createGame({ name, tables, rounds, settings: { minutes: min }, names: names.slice(0, tables * 2) }); onCreated(id); }
@@ -163,7 +165,14 @@ function CreateGame({ onCreated }) {
       </div>
 
       <div className="wz-block">
-        <div className="wz-h"><b>{L('Tempi per round', 'Timing per round')}</b><span className="hint">{L(`${total} minuti a round, circa ${Math.round((total * rounds + (rounds === 3 ? min.exit : 0)) / 5) * 5} in tutto.`, `${total} minutes per round, about ${Math.round((total * rounds + (rounds === 3 ? min.exit : 0)) / 5) * 5} in total.`)}</span></div>
+        <div className="wz-h"><b>{L('Durata della sessione', 'Session length')}</b><span className="hint">{L('Scegli quanto tempo hai: i minuti di ogni fase si adattano. Puoi ritoccarli uno per uno.', 'Pick how much time you have: each phase adapts. You can fine-tune them one by one.')}</span></div>
+        <div className="session-total">
+          <motion.b key={total} initial={{ y: -8, opacity: 0.3 }} animate={{ y: 0, opacity: 1 }}>{fmtMinutes(total)}</motion.b>
+          <span>{rounds} × {perRound} min{rounds === 3 ? ` + exit ${min.exit} min` : ''}<br />{L(`Se inizi ora, finisci verso le ${endsAt}`, `If you start now, you finish around ${endsAt}`)}</span>
+          <div className="seg fit" role="group" aria-label={L('Durata totale', 'Total length')}>
+            {[60, 90, 120, 150].map(t => <button key={t} type="button" aria-pressed={Math.abs(total - t) <= 3} onClick={() => setMin(m => fitMinutes(rounds, m, t))}>{fmtMinutes(t)}</button>)}
+          </div>
+        </div>
         <div className="mins">
           {['brief', 'negotiate', 'sign', 'debrief', ...(rounds === 3 ? ['exit'] : [])].map(p => (
             <label key={p} className="field"><span>{L(...PHASE_LABEL[p])}</span><input type="number" min="1" max="60" value={min[p]} onChange={e => setMin(m => ({ ...m, [p]: Math.max(1, +e.target.value || 1) }))} /></label>
@@ -204,7 +213,7 @@ export default function Admin() {
               <li key={g.id}>
                 <Link to={'/g/' + g.id}>
                   <b>{g.name}</b>
-                  <span>{g.n_tables} {L('tavoli', 'tables')}, {g.n_rounds} round</span>
+                  <span>{g.n_tables} {L('tavoli', 'tables')}, {g.n_rounds} round, <Icon name="clock" /> {fmtMinutes(sessionMinutes(g.n_rounds, g.settings?.minutes))}</span>
                   <span className="code">{g.code}</span>
                   <span className={'phase-chip ' + g.phase}>{L(...PHASE_LABEL[g.phase])}</span>
                   <time>{new Date(g.created_at).toLocaleDateString(lang)}</time>

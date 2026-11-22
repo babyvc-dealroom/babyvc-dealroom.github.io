@@ -71,3 +71,28 @@ describe('connection', () => {
     expect(errText(new Error('OFFER_CLOSED'), L)).toMatch(/non è più aperta/);
   });
 });
+
+import { sessionMinutes, remainingMinutes, fitMinutes, fmtMinutes } from './phases.js';
+describe('session time', () => {
+  const m = { brief: 7, negotiate: 15, sign: 3, debrief: 5, exit: 20 };
+  it('adds every round and the exit only in a 3-round game', () => {
+    expect(sessionMinutes(3, m)).toBe(110);
+    expect(sessionMinutes(2, m)).toBe(60);
+    expect(sessionMinutes(1, m)).toBe(30);
+  });
+  it('counts what is left of the running phase plus the phases after it', () => {
+    const now = Date.parse('2026-11-22T17:00:00Z');
+    const g = { n_rounds: 2, round: 2, phase: 'negotiate', phase_ends_at: new Date(now + 10 * 60000).toISOString(), settings: { minutes: m } };
+    expect(remainingMinutes(g, now)).toBe(10 + 3 + 5);
+    expect(remainingMinutes({ ...g, phase: 'lobby' }, now)).toBe(60);
+    expect(remainingMinutes({ ...g, phase: 'ended' }, now)).toBe(0);
+  });
+  it('fits the phases to a target length', () => {
+    const f = fitMinutes(3, m, 90);
+    expect(sessionMinutes(3, f)).toBe(90);
+    expect(sessionMinutes(2, fitMinutes(2, m, 60))).toBe(60);
+    expect(sessionMinutes(1, fitMinutes(1, m, 120))).toBe(120);
+    expect(fmtMinutes(112)).toBe('1 h 52 min');
+    expect(fmtMinutes(45)).toBe('45 min');
+  });
+});

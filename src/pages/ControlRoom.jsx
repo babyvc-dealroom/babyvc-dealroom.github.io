@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLang } from '../lib/i18n.jsx';
@@ -15,6 +15,7 @@ import { RoomHealth, Dot } from '../components/Health.jsx';
 import { useCoach } from '../components/Coach.jsx';
 import { serverNow, errText } from '../lib/net.js';
 import { useCountdown } from '../lib/useGame.js';
+import { sessionMinutes, remainingMinutes, fmtMinutes } from '../lib/phases.js';
 
 function csv(snap) {
   const rows = [['table', 'round', 'outcome', 'lever1', 'lever2', 'lever3', 'startup_squad', 'startup_total', 'investor_squad', 'investor_total']];
@@ -29,6 +30,28 @@ function csv(snap) {
 }
 
 // Game master's control room: phases and timer, live tables, access codes, leaderboard.
+// Planned length, time left and expected end, on the server clock: ticks every 15 s.
+function SessionClock({ g }) {
+  const { L } = useLang();
+  const [, tick] = useState(0);
+  useEffect(() => { const t = setInterval(() => tick(x => x + 1), 15000); return () => clearInterval(t); }, []);
+  if (g.phase === 'ended') return null;
+  const now = serverNow(), total = sessionMinutes(g.n_rounds, g.settings?.minutes), left = remainingMinutes(g, now);
+  const end = new Date(Date.now() + left * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const done = Math.min(1, Math.max(0, 1 - left / total));
+  return (
+    <div className="session-clock" title={L('Tempo calcolato sui minuti di ogni fase; «+1 min» lo sposta.', 'Computed from each phase\'s minutes; «+1 min» moves it.')}>
+      <Icon name="clock" />
+      <div>
+        <span>{g.phase === 'lobby' ? L('Durata prevista', 'Planned length') : L('Mancano', 'Time left')} <b>{fmtMinutes(g.phase === 'lobby' ? total : left)}</b>
+          {g.phase !== 'lobby' && <> {L('su', 'of')} {fmtMinutes(total)}</>}</span>
+        <small>{g.phase === 'lobby' ? L(`Se parti ora, fine verso le ${end}`, `Start now and you finish around ${end}`) : L(`Fine prevista alle ${end}`, `Expected end at ${end}`)}</small>
+        <i className="sc-bar"><i style={{ width: done * 100 + '%' }} /></i>
+      </div>
+    </div>
+  );
+}
+
 export default function ControlRoom({ snap }) {
   const { L, lx } = useLang();
   const nav = useNavigate();
@@ -61,6 +84,7 @@ export default function ControlRoom({ snap }) {
           <h1>{g.name}</h1>
           <p className="hint">{L('Codice partita', 'Game code')} <b className="bigcode">{g.code}</b> {g.n_tables} {L('tavoli', 'tables')}, {g.n_rounds} round, {players.length} {L('giocatori', 'players')}, {facs.length} facilitator</p>
         </div>
+        <SessionClock g={g} />
         <div className="ctrl-actions">
           <Link className="btn" to={'/screen/' + g.id} target="_blank"><Icon name="screen" /> {L('Proiettore', 'Projector')}</Link>
           <Link className="btn" to={'/cards/' + g.id} target="_blank"><Icon name="qr" /> {L('Join card da stampare', 'Printable join cards')}</Link>
