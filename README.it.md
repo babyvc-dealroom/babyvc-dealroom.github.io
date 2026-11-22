@@ -30,7 +30,7 @@ I founder vedono il primo term sheet quando conta di più. Gli investitori impar
 | Squadra | pagina iniziale | codice partita + PIN della squadra, oppure il QR della join card |
 | Proiettore | pulsante del game master | la sessione del game master |
 
-**Non esiste una password predefinita.** L'owner crea il suo account in Supabase (email + password scelta da lui) e aggiunge la sua email in `supabase/organisers.sql`. Codici e PIN si generano a ogni partita e li vede solo il game master, nella scheda «Accessi».
+**Non esiste una password predefinita.** Ogni organizzatore crea il proprio account dal sito e l'owner lo approva nella console `/easteregg`; l'owner stesso è nella lista `organisers`. Codici e PIN si generano a ogni partita e li vede solo il game master, nella scheda «Accessi».
 
 Le istruzioni nell'app (icona del libro) mostrano **solo il tuo ruolo**, con un riquadro «Adesso» che segue la fase.
 
@@ -38,6 +38,8 @@ Le istruzioni nell'app (icona del libro) mostrano **solo il tuo ruolo**, con un 
 
 - **Connessione.** Se un telefono perde la rete compare subito una barra rossa; quello che il giocatore stava scrivendo resta lì e la pagina si riallinea da sola quando torna internet. Se il canale in tempo reale cade, l'app controlla ogni 5 secondi.
 - **Timer uguali per tutti.** Seguono l'orologio del server, anche sui telefoni con l'ora sbagliata.
+- **Durata della sessione.** Scegli 1 h, 1 h 30, 2 h o 2 h 30 e i minuti di ogni fase si adattano; nella sala di controllo vedi quanto manca e a che ora finisci.
+- **Rientro con un tocco.** Chi chiude il browser riapre il sito e trova «Torna al gioco», senza codice né PIN. Durante la partita lo schermo del telefono resta acceso.
 - **Salute della sala.** Ogni dispositivo manda un segnale ogni 15 secondi: il game master vede pallini verdi e rossi accanto ai nomi e un pannello con i problemi e come risolverli.
 - **Ingressi chiusi.** All'inizio del round 1 gli ingressi si chiudono da soli; il game master li riapre in un clic per chi arriva tardi.
 - **Console operativa (`/easteregg`).** Una pagina non linkata, protetta da password verificata dal database, dove l'owner vede tutte le partite, le squadre, i PIN e i dispositivi, con un elenco dei problemi in ordine di gravità, popup su come risolverli, azioni rapide, un simulatore di guasti e la lista di controllo prima della sessione. La password si imposta nel SQL editor di Supabase con `select ops_set_password('…');` e non compare mai nel codice.

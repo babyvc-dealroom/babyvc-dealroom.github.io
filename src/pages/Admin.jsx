@@ -200,7 +200,7 @@ export default function Admin() {
   useEffect(() => { load(); }, []);
   if (state.loading) return <Shell><Loading /></Shell>;
   return (
-    <Shell help={state.org ? { role: 'gm-home' } : undefined} right={state.org && <button type="button" className="btn ghost" onClick={out}><Icon name="logout" /> {L('Esci', 'Sign out')}</button>}>
+    <Shell help={{ role: state.org ? 'gm-home' : 'gm-account' }} right={state.org && <button type="button" className="btn ghost" onClick={out}><Icon name="logout" /> {L('Esci', 'Sign out')}</button>}>
       {!state.org ? (state.status === 'none' && !state.email ? <Auth onDone={load} /> : <Pending status={state.status} email={state.email} onRefresh={load} onSignOut={out} />) : (
         <div className="admin">
           <div className="admin-head">

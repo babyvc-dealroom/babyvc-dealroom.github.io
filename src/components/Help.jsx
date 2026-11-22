@@ -25,6 +25,24 @@ export function content(ctx, L, lx) {
       L('Hai una join card? Inquadra il QR: codice e PIN si compilano da soli.', 'Got a join card? Scan the QR: code and PIN fill in by themselves.'),
     ],
     note: L('Dentro la partita, questo stesso pulsante ti mostra le istruzioni del tuo ruolo.', 'Inside the game, this same button shows the instructions for your role.'),
+    faq: [
+      [L('Ho chiuso il browser: come rientro?', 'I closed the browser: how do I get back in?'), L('Riapri il sito dallo stesso telefono: in cima trovi «Torna al gioco». Un tocco e sei di nuovo nella tua squadra, senza codice né PIN.', 'Reopen the site on the same phone: at the top you find «Back to the game». One tap and you are back in your squad, no code or PIN.')],
+      [L('Devo creare un account?', 'Do I need an account?'), L('No. L\'account serve solo a chi organizza la partita.', 'No. Only whoever runs the game needs an account.')],
+    ],
+  };
+
+  if (role === 'gm-account') return {
+    title: L('Account da organizzatore', 'Organiser account'),
+    now: L('Serve solo a chi conduce una partita. I giocatori non si registrano.', 'Only whoever runs a game needs one. Players never sign up.'),
+    steps: [
+      L('«Crea un account»: nome, email e una password di almeno 8 caratteri. Scuola o azienda e come userai il gioco sono facoltativi, ma aiutano ad approvarti in fretta.', '«Create an account»: name, email and a password of at least 8 characters. School or company and how you will use the game are optional, but they help get you approved quickly.'),
+      L('Chi gestisce la piattaforma approva ogni nuovo organizzatore a mano, perché chi conduce una partita vede le soluzioni del caso.', 'Whoever runs the platform approves each new organiser by hand, because whoever runs a game sees the case solutions.'),
+      L('Una volta approvato, torna qui e accedi: trovi «Nuova partita».', 'Once approved, come back and sign in: «New game» is there.'),
+    ],
+    faq: [
+      [L('Ho dimenticato la password', 'I forgot my password'), L('Scrivi a chi gestisce la piattaforma: la reimposta per te.', 'Write to whoever runs the platform: they reset it for you.')],
+      [L('Come cancello i miei dati?', 'How do I delete my data?'), L('«Elimina il mio account» cancella l\'account e tutte le tue partite, subito.', '«Delete my account» deletes the account and all your games, at once.')],
+    ],
   };
 
   if (role === 'gm-home') return {
@@ -33,8 +51,13 @@ export function content(ctx, L, lx) {
     steps: [
       L('Scegli quanti round (da 1 a 3) e quanti tavoli. Ogni tavolo ha una squadra startup e una squadra investitori.', 'Choose how many rounds (1 to 3) and tables. Each table has a startup squad and an investor squad.'),
       L('Dai un nome alle squadre, o tieni quelli proposti.', 'Name the squads, or keep the suggested names.'),
-      L('Controlla i minuti di ogni fase e premi «Crea la partita».', 'Check the minutes of each phase and press «Create the game».'),
+      L('Scegli quanto dura la sessione: 1 h, 1 h 30, 2 h o 2 h 30. I minuti di ogni fase si adattano e vedi a che ora finisci; puoi ritoccarli uno per uno.', 'Pick how long the session lasts: 1 h, 1 h 30, 2 h or 2 h 30. Each phase adapts and you see when you will finish; you can fine-tune them one by one.'),
+      L('Premi «Crea la partita».', 'Press «Create the game».'),
       L('Dentro la partita trovi i codici da dare a tutti.', 'Inside the game you find the codes to hand out.'),
+    ],
+    faq: [
+      [L('Quante partite posso avere?', 'How many games can I have?'), L('Fino a 5 in corso. Le partite ferme da 7 giorni si cancellano da sole.', 'Up to 5 running. Games idle for 7 days delete themselves.')],
+      [L('Come elimino il mio account?', 'How do I delete my account?'), L('In fondo a questa pagina, «Elimina il mio account»: cancella anche tutte le tue partite.', 'At the bottom of this page, «Delete my account»: it also deletes all your games.')],
     ],
   };
 
@@ -124,6 +147,7 @@ export function content(ctx, L, lx) {
       L('Doppio clic su una fase della barra per saltarci.', 'Double-click a phase in the bar to jump to it.'),
       L('Al via del round 1 gli ingressi si chiudono da soli. Il pulsante con il lucchetto li riapre per chi arriva tardi.', 'When round 1 starts, joins lock by themselves. The padlock button reopens them for latecomers.'),
       L('«Salute della sala» ti dice chi è offline e cosa fare: pallino verde collegato, rosso offline.', '«Room health» tells you who is offline and what to do: green dot connected, red offline.'),
+      L('In alto vedi quanto manca alla fine della sessione e a che ora finirai: «+1 min» lo sposta.', 'At the top you see how much of the session is left and when it will end: «+1 min» moves it.'),
     ],
     faq: [
       [L('Come entrano gli altri?', 'How do the others join?'), L('Dalla pagina d\'ingresso, con il codice partita e il loro PIN. Le join card hanno il QR.', 'From the entrance page, with the game code and their PIN. Join cards have a QR.')],

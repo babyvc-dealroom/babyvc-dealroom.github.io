@@ -31,6 +31,8 @@ The in-app instructions (book icon) show **only your role**, with a «right now�
 
 - **Connection.** If a phone loses the network it shows a red bar at once; what the player was writing stays put and the page catches up by itself when the network is back. If the realtime channel drops, the app checks every 5 seconds.
 - **Same timer for everyone.** Timers follow the server clock, even on phones with the wrong time.
+- **Session length.** Pick 1 h, 1 h 30, 2 h or 2 h 30 and every phase adapts; the control room shows the time left and the expected end.
+- **Back in one tap.** Whoever closes the browser reopens the site and finds «Back to the game», no code or PIN. During the game the phone screen stays on.
 - **Room health.** Every device sends a heartbeat every 15 seconds: the game master sees green and red dots next to each name and a panel listing problems and how to fix them.
 - **Joins lock.** Joins close by themselves when round 1 starts; the game master reopens them in one click for a latecomer.
 - **Ops console (`/easteregg`).** An unlinked page, behind a password checked by the database, where the owner sees every game, squad, PIN and device, problems ranked by severity with how-to-fix popups, quick actions, a failure simulator and the pre-session checklist. Set the password in the Supabase SQL editor with `select ops_set_password('…');`: it never appears in the code.
