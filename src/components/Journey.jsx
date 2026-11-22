@@ -29,7 +29,7 @@ function notes(j, n, T) {
   if (n >= 2) {
     out.push([r2.clubShort ? 'alert' : 'users', r2.clubShort ? 'warn' : '', L(`Il pro-rata di Lanterna prende ${eurk(r2.proRataM)} del seed e lascia ${eurk(r2.clubM)} al Club${r2.clubShort ? ': sotto il minimo di €800k' : ''}.`, `Lanterna's pro-rata takes ${eurk(r2.proRataM)} of the seed, leaving ${eurk(r2.clubM)} to the Club${r2.clubShort ? ': below its €800k minimum' : ''}.`)]);
     const b = r2.board, inv = b.I + 1, tot = b.F + b.I + b.X + 1;
-    if (n >= 3) out.push([inv > b.F + b.X ? 'alert' : 'users', inv > b.F + b.X ? 'warn' : '', L(`Con Verdis alla Series A gli investitori hanno ${inv} seggi su ${tot}.`, `With Verdis at the Series A the investors hold ${inv} of ${tot} seats.`)]);
+    if (n >= 3) out.push([inv > b.F + b.X ? 'alert' : 'users', inv > b.F + b.X ? 'warn' : '', L(`Con Verdis al Series A gli investitori hanno ${inv} seggi su ${tot}.`, `With Verdis at the Series A the investors hold ${inv} of ${tot} seats.`)]);
   }
   return out;
 }
@@ -96,7 +96,7 @@ export default function Journey({ results = {}, nRounds = 3, canPlay = true, sho
             ))}
           </div>
           {w.haircut > 0 && <p className="hint warn"><Icon name="alert" /> {L('Con un ROFR alla CVC gli altri compratori si tirano indietro: ipotesi didattica di -15% sul prezzo di vendita.', 'With a CVC ROFR other buyers stay away: teaching assumption of -15% on the sale price.')}</p>}
-          <p className="hint">{L('Preferred 1x non partecipanti, pari passu: €3,6M per le classi seed, €15M per la Series A, convertono quando conviene.', '1x non-participating preferred, pari passu: €3.6M for the seed classes, €15M for the Series A, converting when it pays.')}</p>
+          <p className="hint">{L('Preferred 1x non partecipanti, pari passu: €3,6M per le classi seed, €15M per il Series A, convertono quando conviene.', '1x non-participating preferred, pari passu: €3.6M for the seed classes, €15M for the Series A, converting when it pays.')}</p>
         </div>
       )}
     </div>

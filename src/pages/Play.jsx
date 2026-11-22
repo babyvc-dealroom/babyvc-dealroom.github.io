@@ -78,7 +78,7 @@ function Composer({ snap, team, other, offers, results, myCard, onSent, seed, re
       ))}
       <div className="impact">
         <div className={'imp' + (WALK[round] && fNow < WALK[round] ? ' bad' : '')}><small>{L('Founder dopo questo round', 'Founders after this round')}</small><motion.b key={fNow.toFixed(4)} initial={{ y: -6, opacity: 0.4 }} animate={{ y: 0, opacity: 1 }}>{pc(fNow)}</motion.b></div>
-        {fEnd != null && <div className={'imp' + (fEnd < WALK[3] ? ' bad' : '')} title={L('I round futuri sono calcolati alle condizioni d\'apertura degli investitori.', 'Future rounds are computed at the investors\' opening terms.')}><small>{L('…dopo la Series A, se i prossimi round chiudessero all\'apertura', '…after the Series A, if the next rounds closed at the opening')}</small><motion.b key={fEnd.toFixed(4)} initial={{ y: -6, opacity: 0.4 }} animate={{ y: 0, opacity: 1 }}>{pc(fEnd)}</motion.b></div>}
+        {fEnd != null && <div className={'imp' + (fEnd < WALK[3] ? ' bad' : '')} title={L('I round futuri sono calcolati alle condizioni d\'apertura degli investitori.', 'Future rounds are computed at the investors\' opening terms.')}><small>{L('…dopo il Series A, se i prossimi round chiudessero all\'apertura', '…after the Series A, if the next rounds closed at the opening')}</small><motion.b key={fEnd.toFixed(4)} initial={{ y: -6, opacity: 0.4 }} animate={{ y: 0, opacity: 1 }}>{pc(fEnd)}</motion.b></div>}
       </div>
       <AnimatePresence>{breaches.length > 0 && (
         <motion.p className="walkwarn" initial={{ x: -8, opacity: 0 }} animate={{ x: [0, -6, 6, -3, 0], opacity: 1 }} exit={{ opacity: 0 }}>

@@ -85,7 +85,7 @@ export function content(ctx, L, lx) {
         L('Non conoscete una sigla? Le parole sottolineate si spiegano con un clic. In «Impara» trovate concetti, strategie e glossario.', 'Unknown acronym? Underlined words explain themselves with a click. «Learn» has concepts, strategies and the glossary.'),
       ],
       watch: startup
-        ? L('Il vostro limite: dopo il seed i founder devono avere almeno il 50%, dopo la Series A il 38%. L\'anteprima sotto le leve ve lo mostra prima di mandare.', 'Your limit: after the seed the founders need at least 50%, after the Series A 38%. The preview under the levers shows it before you send.')
+        ? L('Il vostro limite: dopo il seed i founder devono avere almeno il 50%, dopo il Series A il 38%. L\'anteprima sotto le leve ve lo mostra prima di mandare.', 'Your limit: after the seed the founders need at least 50%, after the Series A 38%. The preview under the levers shows it before you send.')
         : L('Il vostro limite è nella carta riservata (walk-away). Se una leva lo supera diventa rossa: firmarla vi fa perdere punti.', 'Your limit is on your confidential card (walk-away). A lever that breaches it turns red: signing it costs you points.'),
       points: L('Firmare vale 20 punti. Ogni leva vale 15 punti da dividere con l\'altra squadra. Bonus per entrambi se trovate un accordo equilibrato. Inventare un fatto costa 10 punti.', 'Signing is worth 20 points. Each lever is worth 15 points split with the other squad. Bonus for both if you find a balanced deal. Inventing a fact costs 10 points.'),
       faq: [

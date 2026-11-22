@@ -11,7 +11,7 @@ export const SOURCES = {
   ycTerm: { org: 'Y Combinator', title: L('Un term sheet di Series A standard e pulito', 'A Standard and Clean Series A Term Sheet'), url: 'https://www.ycombinator.com/series_a_term_sheet',
     what: L('Un term sheet di una pagina con note su cosa è «buono» per i founder, board compreso.', 'A one-page term sheet with notes on what «good» looks like for founders, board included.') },
   ycGuide: { org: 'Y Combinator', title: L('YC Series A Guide', 'YC\'s Series A Guide'), url: 'https://blog.ycombinator.com/ycs-series-a-guide/',
-    what: L('Come prepararsi, gestire il processo e chiudere una Series A.', 'How to prepare, run the process and close a Series A.') },
+    what: L('Come prepararsi, gestire il processo e chiudere un Series A.', 'How to prepare, run the process and close a Series A.') },
   nvca: { org: 'NVCA', title: L('Model Legal Documents', 'Model Legal Documents'), url: 'https://nvca.org/model-legal-documents/',
     what: L('I modelli di riferimento per term sheet e patti dei round VC negli Stati Uniti, gratuiti.', 'The free US reference models for VC term sheets and financing agreements.') },
   index: { org: 'Index Ventures', title: L('Rewarding Talent: guida alle stock option', 'Rewarding Talent: the founder\'s guide to stock options'), url: 'https://www.indexventures.com/rewardingtalent',
@@ -129,7 +129,7 @@ export const CONCEPTS = {
       example: ({ L, pc }) => { const a = journey({ cap: 4.0, deadEquity: 1, rights: 1 }, { pre: 10, pool: 8 }).r2.founders, b = journey({ cap: 4.0, deadEquity: 1, rights: 1 }, { pre: 10, pool: 14 }).r2.founders; return L(`Stesso pre-money di €10M: pool 8% = founder al ${pc(a)}; pool 14% = ${pc(b)}.`, `Same €10M pre-money: 8% pool = founders at ${pc(a)}; 14% pool = ${pc(b)}.`); } },
     { id: 'board', title: L('Il board: chi decide quando le cose vanno male', 'The board: who decides when things go wrong'), source: 'ycTerm',
       body: L('Il board conta poco quando tutto va bene e moltissimo quando no. Il term sheet «pulito» di YC indica come favorevole ai founder un board in cui i founder hanno la maggioranza, e segnala il rischio dei board in cui decide l\'indipendente.', 'The board matters little when things go well and a lot when they do not. YC\'s «clean» term sheet points to a founder-majority board as founder-friendly, and flags the risk of boards where the independent decides.'),
-      example: ({ L }) => L('Ricorda: alla Series A entrerà anche Verdis con un seggio. Conta i seggi di oggi più quello di domani.', 'Remember: at the Series A Verdis will take a seat too. Count today\'s seats plus tomorrow\'s.') },
+      example: ({ L }) => L('Ricorda: al Series A entrerà anche Verdis con un seggio. Conta i seggi di oggi più quello di domani.', 'Remember: at the Series A Verdis will take a seat too. Count today\'s seats plus tomorrow\'s.') },
   ],
   3: [
     { id: 'pref', title: L('La liquidation preference 1x', 'The 1x liquidation preference'), source: 'ogec',

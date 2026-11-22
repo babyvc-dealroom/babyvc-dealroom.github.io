@@ -117,7 +117,7 @@ export default function Home() {
   const go = r => r.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const toJoin = () => { document.getElementById('join')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.querySelector('#join input')?.focus(), 400); };
 
-  if (invited) return <Shell><section className="invite"><JoinForm invited /><p className="lede small">{L('Un gioco per imparare il venture capital negoziandolo: la tua squadra porterà una startup dal pre-seed alla Series A.', 'A game to learn venture capital by negotiating it: your squad will take a startup from pre-seed to Series A.')}</p></section></Shell>;
+  if (invited) return <Shell><section className="invite"><JoinForm invited /><p className="lede small">{L('Un gioco per imparare il venture capital negoziandolo: la tua squadra porterà una startup dal pre-seed al Series A.', 'A game to learn venture capital by negotiating it: your squad will take a startup from pre-seed to Series A.')}</p></section></Shell>;
 
   return (
     <Shell>
@@ -128,7 +128,7 @@ export default function Home() {
           <div className="hero-copy">
             <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>{L('Impara il venture capital negoziandolo.', 'Learn venture capital by negotiating it.')}</motion.h1>
             <motion.p className="lede" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-              {L('Un gioco per aule, bootcamp e acceleratori. Squadre di founder e di investitori portano una startup dal pre-seed alla Series A: ogni clausola firmata cambia il cap table dei round successivi, fino all\'exit.', 'A game for classrooms, bootcamps and accelerators. Squads of founders and investors take a startup from pre-seed to Series A: every clause they sign changes the cap table of the next rounds, all the way to the exit.')}
+              {L('Un gioco per aule, bootcamp e acceleratori. Squadre di founder e di investitori portano una startup dal pre-seed al Series A: ogni clausola firmata cambia il cap table dei round successivi, fino all\'exit.', 'A game for classrooms, bootcamps and accelerators. Squads of founders and investors take a startup from pre-seed to Series A: every clause they sign changes the cap table of the next rounds, all the way to the exit.')}
             </motion.p>
             <div className="cta-row">
               <button type="button" className="btn primary big only-mobile" onClick={toJoin}><Icon name="key" /> {L('Ho un codice', 'I have a code')}</button>

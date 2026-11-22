@@ -1,7 +1,7 @@
 # Baby VC Deal Room
 
 **Un gioco open source per imparare il venture capital negoziandolo.**
-Squadre di founder e di investitori portano una startup, Flussi Energy, da un SAFE pre-seed alla Series A e all'exit. Quello che firmano diventa il punto di partenza del round successivo: cap table, diluizione e valore dell'exit sono la conseguenza dei loro accordi.
+Squadre di founder e di investitori portano una startup, Flussi Energy, da un SAFE pre-seed al Series A e all'exit. Quello che firmano diventa il punto di partenza del round successivo: cap table, diluizione e valore dell'exit sono la conseguenza dei loro accordi.
 
 **Online: [babyvc-dealroom.github.io](https://babyvc-dealroom.github.io)**
 
