@@ -7,34 +7,111 @@ import { ROUNDS, SQUAD_NAMES } from '../content/public.js';
 import { DEFAULT_MINUTES, PHASE_LABEL } from '../lib/phases.js';
 import Shell, { Loading } from '../components/Shell.jsx';
 import Icon from '../components/Icon.jsx';
+import ConfirmButton from '../components/ConfirmButton.jsx';
+import { errText } from '../lib/net.js';
 
 const shuffle = a => [...a].sort(() => Math.random() - 0.5);
 const pickNames = n => { const s = shuffle(SQUAD_NAMES.startup), i = shuffle(SQUAD_NAMES.investor); return Array.from({ length: n }, (_, k) => [s[k % s.length], i[k % i.length]]).flat(); };
 
-function Login({ onDone }) {
+const ERR = (x, L) => {
+  const M = {
+    BAD_LOGIN: L('Email o password non corretti.', 'Wrong email or password.'),
+    EMAIL_TAKEN: L('Esiste già un account con questa email: usa «Accedi».', 'An account with this email already exists: use «Sign in».'),
+    WEAK_PASSWORD: L('La password deve avere almeno 8 caratteri.', 'The password needs at least 8 characters.'),
+    SIGNUP_LIMIT: L('Troppe registrazioni dalla stessa rete in poco tempo: riprova tra qualche minuto.', 'Too many sign-ups from this network: try again in a few minutes.'),
+    SIGNUP_CLOSED: L('Le registrazioni sono chiuse in questo momento.', 'Sign-ups are closed right now.'),
+    CONFIRM_EMAIL_ON: L('Account creato, ma il server chiede ancora la conferma via email: chi gestisce la piattaforma deve disattivarla (vedi docs/deploy.md).', 'Account created, but the server still asks for email confirmation: whoever runs the platform must turn it off (see docs/deploy.md).'),
+    EMAIL_NOT_CONFIRMED: L('Questo account non è stato confermato. Scrivi a chi gestisce la piattaforma.', 'This account is not confirmed. Write to whoever runs the platform.'),
+    NAME_REQUIRED: L('Scrivi il tuo nome.', 'Write your name.'),
+  };
+  const k = Object.keys(M).find(c => x.message.includes(c));
+  return k ? M[k] : errText(x, L);
+};
+
+// Sign up or sign in. Accounts are only for people who run games: players never register.
+function Auth({ onDone }) {
   const { L } = useLang();
-  const [email, setEmail] = useState(''); const [pw, setPw] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState(() => { try { return localStorage.getItem('bvc-has-account') ? 'in' : 'up'; } catch { return 'up'; } });
+  const [f, setF] = useState({ name: '', email: '', password: '', org: '', note: '' });
+  const [show, setShow] = useState(false);
+  const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const set = k => e => setF(v => ({ ...v, [k]: e.target.value }));
   const go = async e => {
     e.preventDefault(); setErr(''); setBusy(true);
-    try { await api.organiserSignIn(email.trim(), pw); onDone(); }
-    catch (x) { setErr(x.message === 'BAD_LOGIN' ? L('Email o password non corretti.', 'Wrong email or password.') : x.message === 'NOT_ORGANISER' ? L('Questo account non è abilitato come organizzatore. Chiedi a chi gestisce la piattaforma di aggiungerlo.', 'This account is not enabled as an organiser. Ask whoever runs the platform to add it.') : x.message); }
+    try {
+      if (mode === 'up') await api.organiserSignUp({ ...f, email: f.email.trim(), name: f.name.trim() });
+      else await api.organiserSignIn(f.email.trim(), f.password);
+      try { localStorage.setItem('bvc-has-account', '1'); } catch { /* ignore */ }
+      onDone();
+    } catch (x) { setErr(ERR(x, L)); }
     setBusy(false);
   };
   return (
-    <form className="joincard narrow" onSubmit={go}>
-      <h2>{L('Area organizzatori', 'Organiser area')}</h2>
-      {api.mode === 'demo'
-        ? <p className="hint">{L('In modalità demo entri subito come game master.', 'In demo mode you enter as game master right away.')}</p>
-        : <>
-          <p className="hint">{L('Riservata a chi organizza le sessioni. I giocatori e i facilitator entrano dalla pagina iniziale con codice e PIN.', 'For session organisers only. Players and facilitators join from the home page with code and PIN.')}</p>
-          <label className="field"><span>Email</span><input type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="nome@babyvc.it" /></label>
-          <label className="field"><span>Password</span><input type="password" required autoComplete="current-password" value={pw} onChange={e => setPw(e.target.value)} /></label>
-        </>}
+    <form className="joincard narrow auth" onSubmit={go}>
+      <div className="seg auth-seg" role="tablist">
+        <button type="button" role="tab" aria-selected={mode === 'up'} onClick={() => { setMode('up'); setErr(''); }}>{L('Crea un account', 'Create an account')}</button>
+        <button type="button" role="tab" aria-selected={mode === 'in'} onClick={() => { setMode('in'); setErr(''); }}>{L('Accedi', 'Sign in')}</button>
+      </div>
+      <h2>{mode === 'up' ? L('Organizza le tue partite', 'Run your own games') : L('Bentornato', 'Welcome back')}</h2>
+      <p className="hint">{mode === 'up'
+        ? L('L\'account serve solo a chi conduce una partita: i giocatori entrano con codice e PIN, senza registrarsi. Gratis, senza pubblicità.', 'The account is only for whoever runs a game: players join with a code and PIN, without signing up. Free, no ads.')
+        : L('Con l\'email e la password del tuo account da organizzatore.', 'With your organiser account email and password.')}</p>
+      {mode === 'up' && <label className="field"><span>{L('Nome e cognome', 'Full name')}</span><input required autoComplete="name" value={f.name} onChange={set('name')} maxLength={80} /></label>}
+      <label className="field"><span>Email</span><input type="email" required autoComplete={mode === 'up' ? 'email' : 'username'} value={f.email} onChange={set('email')} placeholder="nome@scuola.it" /></label>
+      <label className="field"><span>Password{mode === 'up' ? L(' (almeno 8 caratteri)', ' (at least 8 characters)') : ''}</span>
+        <span className="pw"><input type={show ? 'text' : 'password'} required minLength={mode === 'up' ? 8 : undefined} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={f.password} onChange={set('password')} />
+          <button type="button" className="linkbtn" onClick={() => setShow(v => !v)} aria-pressed={show}>{show ? L('Nascondi', 'Hide') : L('Mostra', 'Show')}</button></span></label>
+      {mode === 'up' && <>
+        <label className="field"><span>{L('Scuola, università, acceleratore o azienda (facoltativo)', 'School, university, accelerator or company (optional)')}</span><input value={f.org} onChange={set('org')} maxLength={120} /></label>
+        <label className="field"><span>{L('Come userai il gioco? (facoltativo)', 'How will you use the game? (optional)')}</span><textarea rows={2} value={f.note} onChange={set('note')} maxLength={500} placeholder={L('es. una lezione di 2 ore con 30 studenti', 'e.g. a 2-hour class with 30 students')} /></label>
+        <p className="hint auth-why"><Icon name="shield" /> {L('Chi conduce una partita vede le soluzioni del caso: per questo ogni nuovo account viene approvato a mano, di solito in giornata. Così nessun giocatore può aprirne uno per sbirciare le risposte.', 'Whoever runs a game sees the case solutions: that is why every new account is approved by hand, usually within the day. This way no player can open one to peek at the answers.')} <Link to="/privacy">{L('Privacy', 'Privacy')}</Link></p>
+      </>}
       {err && <p className="err" role="alert"><Icon name="alert" /> {err}</p>}
-      <button className="btn primary big" disabled={busy}>{api.mode === 'demo' ? L('Entra come game master', 'Enter as game master') : busy ? L('Entro…', 'Signing in…') : L('Entra', 'Sign in')}</button>
-      {api.mode !== 'demo' && <p className="hint">{L('Password dimenticata? Si reimposta dal pannello Supabase (Authentication → Users).', 'Forgot the password? Reset it from the Supabase dashboard (Authentication → Users).')}</p>}
+      <button className="btn primary big" disabled={busy}>{busy ? L('Un attimo…', 'One moment…') : mode === 'up' ? L('Crea l\'account', 'Create the account') : L('Accedi', 'Sign in')}</button>
+      {mode === 'in' && api.mode !== 'demo' && <p className="hint">{L('Password dimenticata? Scrivi a chi gestisce la piattaforma: la reimposta dal pannello di Supabase.', 'Forgot your password? Write to whoever runs the platform: they reset it from the Supabase dashboard.')}</p>}
+      {api.mode === 'demo' && <button type="button" className="btn ghost" onClick={async () => { await api.organiserSignIn(); onDone(); }}>{L('Entra come game master (demo, senza account)', 'Enter as game master (demo, no account)')}</button>}
     </form>
   );
+}
+
+// Waiting for approval (or turned down): what happens next, and a way out.
+function Pending({ status, email, onRefresh, onSignOut }) {
+  const { L } = useLang();
+  const [busy, setBusy] = useState(false);
+  const ok = status === 'pending';
+  return (
+    <div className="joincard narrow pending">
+      <motion.span className={'pend-ico ' + status} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><Icon name={ok ? 'clock' : 'x'} /></motion.span>
+      <h2>{ok ? L('Account creato: in attesa di approvazione', 'Account created: waiting for approval') : status === 'rejected' ? L('Richiesta non approvata', 'Request not approved') : L('Completa la richiesta', 'Complete your request')}</h2>
+      {ok ? <>
+        <p>{L('Chi gestisce la piattaforma approva a mano ogni organizzatore, perché chi conduce una partita vede le soluzioni del caso. Di solito succede in giornata.', 'Whoever runs the platform approves each organiser by hand, because whoever runs a game sees the case solutions. It usually happens within the day.')}</p>
+        <p className="hint">{L('Non devi fare nulla: torna qui con', 'Nothing to do: come back here with')} <b>{email}</b>{L(' e, se è approvata, trovi subito «Nuova partita».', ' and, once approved, «New game» is right there.')}</p>
+        <button type="button" className="btn primary" disabled={busy} onClick={async () => { setBusy(true); await onRefresh(); setBusy(false); }}><Icon name="refresh" /> {L('Controlla di nuovo', 'Check again')}</button>
+      </> : status === 'rejected'
+        ? <p>{L('Puoi comunque provare il gioco nella demo, oppure scrivere a chi gestisce la piattaforma.', 'You can still try the game in the demo, or write to whoever runs the platform.')}</p>
+        : <RequestForm onDone={onRefresh} />}
+      <div className="row"><button type="button" className="btn ghost" onClick={onSignOut}><Icon name="logout" /> {L('Esci', 'Sign out')}</button><DeleteAccount onDone={onSignOut} /></div>
+    </div>
+  );
+}
+
+// For an account that exists but never asked (for example one created from the Supabase dashboard).
+function RequestForm({ onDone }) {
+  const { L } = useLang();
+  const [f, setF] = useState({ name: '', org: '', note: '' }); const [err, setErr] = useState('');
+  return (
+    <form className="stack" onSubmit={async e => { e.preventDefault(); try { await api.requestOrganiser(f); onDone(); } catch (x) { setErr(ERR(x, L)); } }}>
+      <label className="field"><span>{L('Nome e cognome', 'Full name')}</span><input required value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={80} /></label>
+      <label className="field"><span>{L('Organizzazione (facoltativo)', 'Organisation (optional)')}</span><input value={f.org} onChange={e => setF({ ...f, org: e.target.value })} maxLength={120} /></label>
+      {err && <p className="err">{err}</p>}
+      <button className="btn primary">{L('Chiedi di organizzare partite', 'Ask to run games')}</button>
+    </form>
+  );
+}
+
+function DeleteAccount({ onDone }) {
+  const { L } = useLang();
+  return <ConfirmButton className="btn ghost danger" armedLabel={L('Elimina account e partite: definitivo', 'Delete account and games: final')} onConfirm={async () => { await api.deleteMyAccount(); try { localStorage.removeItem('bvc-has-account'); } catch { /* ignore */ } onDone(); }}><Icon name="x" /> {L('Elimina il mio account', 'Delete my account')}</ConfirmButton>;
 }
 
 function CreateGame({ onCreated }) {
@@ -49,7 +126,7 @@ function CreateGame({ onCreated }) {
   const go = async () => {
     setBusy(true); setErr('');
     try { const id = await api.createGame({ name, tables, rounds, settings: { minutes: min }, names: names.slice(0, tables * 2) }); onCreated(id); }
-    catch (x) { setErr(x.message); setBusy(false); }
+    catch (x) { setErr(x.message.includes('TOO_MANY_GAMES') ? L('Hai già 5 partite in corso: elimina o chiudi quelle che non ti servono, poi riprova.', 'You already have 5 games running: delete or end the ones you do not need, then try again.') : errText(x, L)); setBusy(false); }
   };
   return (
     <div className="wizard">
@@ -105,12 +182,17 @@ export default function Admin() {
   const nav = useNavigate();
   const [state, setState] = useState({ loading: true });
   const [creating, setCreating] = useState(false);
-  const load = async () => { const org = await api.isOrganiser(); setState({ org, games: org ? await api.myGames() : [] }); };
+  const load = async () => {
+    const st = await api.organiserStatus();
+    const org = st.status === 'approved' && await api.isOrganiser();
+    setState({ org, status: st.status, email: st.email, games: org ? await api.myGames() : [] });
+  };
+  const out = async () => { await api.signOut(); load(); };
   useEffect(() => { load(); }, []);
   if (state.loading) return <Shell><Loading /></Shell>;
   return (
-    <Shell help={state.org ? { role: 'gm-home' } : undefined} right={state.org && <button type="button" className="btn ghost" onClick={async () => { await api.signOut(); load(); }}><Icon name="logout" /> {L('Esci', 'Sign out')}</button>}>
-      {!state.org ? <Login onDone={load} /> : (
+    <Shell help={state.org ? { role: 'gm-home' } : undefined} right={state.org && <button type="button" className="btn ghost" onClick={out}><Icon name="logout" /> {L('Esci', 'Sign out')}</button>}>
+      {!state.org ? (state.status === 'none' && !state.email ? <Auth onDone={load} /> : <Pending status={state.status} email={state.email} onRefresh={load} onSignOut={out} />) : (
         <div className="admin">
           <div className="admin-head">
             <h1>{L('Le tue partite', 'Your games')}</h1>
@@ -131,6 +213,7 @@ export default function Admin() {
             ))}
             {!state.games.length && !creating && <li className="empty">{L('Nessuna partita ancora. Creane una: ci vogliono 30 secondi.', 'No games yet. Create one: it takes 30 seconds.')}</li>}
           </ul>
+          <footer className="account-foot"><span><Icon name="users" /> {state.email}</span><DeleteAccount onDone={out} /></footer>
         </div>
       )}
     </Shell>

@@ -26,6 +26,7 @@ export function issueLine(x, L) {
     case 'blocked': return L(`${x.count} dispositivi bloccati`, `${x.count} devices blocked`);
     case 'crowded_squad': return `${x.where} · ${x.count} ${L('dispositivi', 'devices')}`;
     case 'unscored': return L('Tavoli', 'Tables') + ' ' + x.tables.join(', ');
+    case 'pending_requests': return L(`${x.count} da approvare`, `${x.count} to approve`);
     case 'old_data': return L(`${x.count} partite ferme da oltre 7 giorni`, `${x.count} games idle for over 7 days`);
     default: return bits;
   }

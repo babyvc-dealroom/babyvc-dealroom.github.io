@@ -5,19 +5,21 @@ Baby VC Deal Room is open source and costs nothing to run: a static site on a fr
 ## 1. Supabase (database, sign-in, live updates)
 
 1. Create a project at [supabase.com](https://supabase.com). Pick an **EU region** (for example Frankfurt): the region cannot be changed later.
-2. **SQL Editor**: run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_ops.sql`.
+2. **SQL Editor**: run `supabase/migrations/0001_init.sql`, then every other file in `supabase/migrations/` in order (0002, 0003, 0004).
    0002 also turns on `pg_cron` and schedules the nightly deletion (`bvc-purge`, 03:17). If your project refuses the extension, enable it under **Integrations → Cron** and run 0002 again.
 3. Load the scenario pack: put the real `private.js` in `scenarios/flussi-energy/`, run `npm run seed:build`, then run the generated `supabase/seed_content.sql`. Do not commit either file.
 4. **Authentication → Sign In / Providers**: enable **Anonymous sign-ins** (players and facilitators join without an account) and keep **Email** enabled (organiser login).
 5. **Authentication → Rate Limits**: raise **anonymous sign-ins** to at least **300 per hour**.
    The default is 30 per hour per IP address, and a whole classroom shares one Wi-Fi IP: with the default, the 31st player cannot get in. Players who hit it see «Troppi ingressi dalla stessa rete».
-6. **Create the owner**: Authentication → Users → *Add user* → *Create new user* with your email and a strong password, tick *Auto Confirm User*. Put the same email in `supabase/organisers.sql` and run it. Only emails on that list can create games. There is no default password.
-7. **Ops console password** (the hidden `/easteregg` page). In the SQL editor, never in the app:
+6. **Organiser accounts**: Authentication → Sign In / Providers → Email → turn **Confirm email** off and keep **Allow new users to sign up** on.
+   Anyone can then create an organiser account from the organiser area; it can create games only after you approve it in `/easteregg` → **Accounts** (an organiser sees the case solutions, so approval stops players from opening an account to peek). The free Supabase email service only delivers to your own team, so email confirmation would block everyone else. A password reset is done by you from Authentication → Users.
+7. **Create the owner**: Authentication → Users → *Add user* → *Create new user* with your email and a strong password, tick *Auto Confirm User*. Put the same email in `supabase/organisers.sql` and run it. Emails on that list are approved organisers from the start. There is no default password.
+8. **Ops console password** (the hidden `/easteregg` page). In the SQL editor, never in the app:
    ```sql
    select ops_set_password('choose a long password');
    ```
    Only a bcrypt hash is stored. 5 wrong passwords lock the console for 15 minutes for everyone; to unlock it early run `update ops_config set locked_until = null;`.
-8. **Project Settings → API**: copy the *Project URL* and the *anon public key* (never the `service_role` key).
+9. **Project Settings → API**: copy the *Project URL* and the *anon public key* (never the `service_role` key).
 
 ### The free plan pauses idle projects
 

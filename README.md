@@ -20,7 +20,7 @@ Founders usually see their first term sheet when it matters most. Investors lear
 
 | Role | Joins with | Sees and does |
 |---|---|---|
-| **Game master** | Email + password, on an allow-list | Creates games (1-3 rounds, 1-20 tables), runs phases and timer, projector, join cards with QR, CSV export |
+| **Game master** | A free account (name, email, password), approved by the owner in the ops console | Creates games (1-3 rounds, 1-20 tables), runs phases and timer, projector, join cards with QR, CSV export |
 | **Facilitator** | Game code + the PIN of their table | Only their tables: envelopes, live offers, both cards, the solution, the score form |
 | **Squad** (startup or investors) | Game code + squad PIN (or QR) | Their own confidential card, term sheets and counter-offers, signing, the relationship vote, Journey, Learn, leaderboard |
 | **Projector** | The game master's session | Timer, table status, rotating leagues, an announcement for every signature, the exit race |

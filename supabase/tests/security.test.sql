@@ -8,6 +8,7 @@
 \set p3 '{"sub":"00000000-0000-0000-0000-000000000003","is_anonymous":true}'
 \set p4 '{"sub":"00000000-0000-0000-0000-000000000004","is_anonymous":true}'
 \set p5 '{"sub":"00000000-0000-0000-0000-000000000005","is_anonymous":true}'
+\set newbie '{"sub":"00000000-0000-0000-0000-00000000000d","is_anonymous":false,"email":"newbie@school.it"}'
 \set fac '{"sub":"00000000-0000-0000-0000-0000000000f1","is_anonymous":true}'
 
 create function t_ok(c boolean, msg text) returns void language plpgsql as $$
@@ -23,6 +24,7 @@ end $$;
 create function t_as(c text) returns void language sql as $$ select set_config('request.jwt.claims', c, false) $$;
 insert into organisers values ('owner@babyvc.it');
 insert into auth.users (id) select ('00000000-0000-0000-0000-00000000000' || x)::uuid from unnest(array['1','2','3','4','5','c']) x;
+insert into auth.users (id, email, is_anonymous) values ('00000000-0000-0000-0000-00000000000a', 'owner@babyvc.it', false), ('00000000-0000-0000-0000-00000000000b', 'someone@else.it', false), ('00000000-0000-0000-0000-00000000000d', 'newbie@school.it', false);
 
 set role authenticated;
 
@@ -132,6 +134,34 @@ select t_as(:'p3');
 select t_fails($$select ops_action('delete_game', '$$ || :'gid' || $$')$$, 'OPS_ONLY', 'a player without the password cannot use console actions');
 select t_fails($$select bvc_purge(0)$$, 'permission denied', 'nobody can trigger the deletion from the app');
 
+-- ---------- organiser accounts ----------
+select t_as(:'stranger');
+select t_ok(organiser_status() = 'none', 'a new account starts with no organiser rights');
+select t_ok(request_organiser('Marta Rossi', 'Liceo Volta', 'Lezione sul VC') = 'pending', 'asking to organise puts the account on hold');
+select t_fails($$select create_game('X', 2, 3, '{}')$$, 'NOT_ORGANISER', 'an account on hold cannot create games (it would see the solutions)');
+select t_as(:'p3');
+select t_fails($$select request_organiser('Spy', '', '')$$, 'NOT_SIGNED_IN', 'an anonymous player cannot ask to organise');
+select t_fails($$select ops_accounts()$$, 'OPS_ONLY', 'only the console sees the account requests');
+select t_as(:'p2');
+select t_ok((select count(*) from jsonb_array_elements(ops_accounts() -> 'requests') r where r ->> 'status' = 'pending') = 1, 'the console lists the request');
+select ops_account_action('approve', '00000000-0000-0000-0000-00000000000b') \g /dev/null
+select t_as(:'stranger');
+select t_ok(organiser_status() = 'approved', 'once approved the account is an organiser');
+select t_ok(create_game('Marta 1', 1, 1, '{}') is not null, 'an approved organiser creates a game');
+select count(*) from (select create_game('Marta ' || x, 1, 1, '{}') from generate_series(2, 5) x) z \g /dev/null
+select t_fails($$select create_game('Marta 6', 1, 1, '{}')$$, 'TOO_MANY_GAMES', 'an organiser cannot keep more than 5 live games');
+select t_ok((select count(*) from games) = 5, 'an organiser sees only their own games');
+select t_as(:'p2'); select ops_account_action('open_signup') \g /dev/null
+select t_as(:'newbie');
+select t_ok(request_organiser('Luca', '', '') = 'approved', 'with auto-approve on, a new account is approved at once');
+select t_as(:'p2'); select ops_account_action('close_signup') \g /dev/null
+select t_as(:'stranger');
+select delete_my_account() \g /dev/null
+select t_ok(organiser_status() = 'none', 'deleting the account removes the organiser rights');
+reset role;
+select t_ok((select count(*) from games where name like 'Marta%') = 0 and not exists (select 1 from auth.users where email = 'someone@else.it'), 'deleting the account deletes its games and the account itself');
+set role authenticated;
+
 -- ---------- anonymous role (no session) ----------
 set role anon;
 select t_fails($$select bvc_role('$$ || :'gid' || $$')$$, 'permission denied', 'without a session the helper functions are closed');
@@ -147,4 +177,5 @@ update presence set last_seen = now() - interval '8 days';
 update auth.users set created_at = now() - interval '8 days';
 select t_ok((bvc_purge(7) ->> 'games')::int = 1, 'a game idle for 7 days is deleted');
 select t_ok((select count(*) from offers) + (select count(*) from members) + (select count(*) from presence) + (select count(*) from team_pins) = 0, 'its offers, members, devices and PINs go with it');
-select t_ok((select count(*) from auth.users) = 0, 'the anonymous accounts left without a game are deleted');
+select t_ok((select count(*) from auth.users where is_anonymous) = 0, 'the anonymous accounts left without a game are deleted');
+select t_ok((select count(*) from auth.users where not is_anonymous) = 2, 'organiser accounts in use are kept');

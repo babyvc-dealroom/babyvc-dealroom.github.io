@@ -10,6 +10,8 @@ const code = (n, a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789') => Array.from({ length:
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; } };
 let db = load() || { games: [], secrets: {}, teams: [], pins: {}, members: [], offers: [], results: [], votes: [], events: [], attempts: [], seq: 1 };
 db.attempts ||= [];
+db.accounts ||= [];   // organiser accounts created from the sign-up form (demo only: password kept in the browser)
+db.config ||= { openSignup: false, maxLiveGames: 5 };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch { /* storage full or blocked */ } listeners.forEach(f => f()); bc?.postMessage('x'); };
 const refresh = () => { db = load() || db; listeners.forEach(f => f()); };
 bc && (bc.onmessage = refresh);
@@ -66,6 +68,18 @@ const ops = {
     return false;
   },
   async opsCheck() { return isOps(); },
+  async opsAccounts() {
+    if (!isOps()) fail('OPS_ONLY');
+    return JSON.parse(JSON.stringify({ requests: db.accounts.map(({ password, ...a }) => a).reverse(), organisers: db.accounts.filter(a => a.status === 'approved').length + 1, openSignup: db.config.openSignup, maxLiveGames: db.config.maxLiveGames }));
+  },
+  async opsAccountAction(kind, userId) {
+    if (!isOps()) fail('OPS_ONLY');
+    const a = db.accounts.find(x => x.user_id === userId);
+    if (kind === 'approve' || kind === 'reject') { if (!a) fail('NO_REQUEST'); a.status = kind === 'approve' ? 'approved' : 'rejected'; a.decided_at = new Date().toISOString(); }
+    else if (kind === 'open_signup' || kind === 'close_signup') db.config.openSignup = kind === 'open_signup';
+    else fail('UNKNOWN_ACTION');
+    save();
+  },
   async opsSnapshot() {
     if (!isOps()) fail('OPS_ONLY');
     const pr = presence(), now = Date.now();
@@ -135,13 +149,36 @@ const ops = {
 export const api = {
   mode: 'demo',
   async user() { return me(); },
-  async isOrganiser() { return !!me() && !me().is_anonymous; },
+  async isOrganiser() { const u = me(); if (!u || u.is_anonymous) return false; return u.id === org()?.id || db.accounts.some(a => a.user_id === u.id && a.status === 'approved'); },
   async ensureUser() { if (!me()) setMe({ id: id(), is_anonymous: true }); return me(); },
-  async organiserSignIn() { const u = org() || { id: id(), is_anonymous: false, email: 'demo@babyvc' }; setMe(u); localStorage.setItem('bvc-demo-org', JSON.stringify(u)); return { sent: false }; },
+  // Without an email: the demo's one-click game master. With one: an account made with the sign-up form.
+  async organiserSignIn(email, password) {
+    if (email) { const a = db.accounts.find(x => x.email === email.toLowerCase() && x.password === password); if (!a) fail('BAD_LOGIN'); setMe({ id: a.user_id, is_anonymous: false, email: a.email }); return { ok: true }; }
+    const u = org() || { id: id(), is_anonymous: false, email: 'demo@babyvc' }; setMe(u); localStorage.setItem('bvc-demo-org', JSON.stringify(u)); return { sent: false };
+  },
+  async organiserSignUp({ email, password, name, org: o, note }) {
+    email = email.trim().toLowerCase();
+    if (db.accounts.some(a => a.email === email)) fail('EMAIL_TAKEN');
+    if ((password || '').length < 8) fail('WEAK_PASSWORD');
+    const a = { user_id: id(), email, password, name, org: o || '', note: note || '', status: db.config.openSignup ? 'approved' : 'pending', created_at: new Date().toISOString() };
+    db.accounts.push(a); save(); setMe({ id: a.user_id, is_anonymous: false, email }); return a.status;
+  },
+  async organiserStatus() {
+    const u = me(); if (!u || u.is_anonymous) return { status: 'none' };
+    if (u.id === org()?.id) return { status: 'approved', email: u.email };
+    return { status: db.accounts.find(a => a.user_id === u.id)?.status || 'none', email: u.email };
+  },
+  async requestOrganiser() { return (await api.organiserStatus()).status; },
+  async deleteMyAccount() {
+    const u = me(); if (!u || u.is_anonymous) fail('NOT_SIGNED_IN');
+    for (const g of db.games.filter(x => x.owner === u.id)) await api.deleteGame(g.id);
+    db.accounts = db.accounts.filter(a => a.user_id !== u.id); save(); setMe(null);
+  },
   async signOut() { ss.setItem('bvc-demo-user', 'null'); },
   async myGames() { return db.games.filter(g => db.members.some(m => m.game_id === g.id && m.user_id === me()?.id && m.role === 'admin')).reverse(); },
   async createGame({ name, tables, rounds, settings, names }) {
-    if (!(await api.isOrganiser())) fail('Only signed-in organisers can create a game');
+    if (!(await api.isOrganiser())) fail('NOT_ORGANISER');
+    if (db.games.filter(g => g.owner === me().id && g.phase !== 'ended').length >= db.config.maxLiveGames) fail('TOO_MANY_GAMES');
     const g = { id: id(), code: code(6), name, owner: me().id, n_tables: tables, n_rounds: rounds, round: 1, phase: 'lobby', phase_ends_at: null, settings, created_at: new Date().toISOString() };
     db.games.push(g); db.secrets[g.id] = {};
     db.members.push({ game_id: g.id, user_id: me().id, role: 'admin', team_id: null, name: 'Game master' });

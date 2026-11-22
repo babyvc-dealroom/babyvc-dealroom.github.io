@@ -885,3 +885,41 @@ body:has(.ping) .coach-dock { display: none }
 .resume .btn.primary { grid-area: btn; background: var(--lime); color: #14201B; border-color: var(--lime) }
 .resume .small-link { grid-area: not; justify-self: start; color: #C8D5CD; margin-top: 4px }
 @media (max-width: 640px) { .resume { grid-template-columns: 1fr; grid-template-areas: "live" "who" "btn" "not" } .resume .btn.primary { width: 100%; justify-content: center; margin-top: 8px } }
+
+/* ---------- organiser accounts ---------- */
+.auth-seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--soft); border-radius: 12px; padding: 4px; gap: 4px }
+.auth-seg button { border: 0; background: transparent; border-radius: 9px; padding: 9px; font: 600 14px var(--body); color: var(--muted); cursor: pointer }
+.auth-seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(20,32,27,.12) }
+.auth textarea { width: 100%; font: inherit; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface); resize: vertical }
+.pw { display: flex; gap: 8px; align-items: center }
+.pw input { flex: 1 }
+.auth-why { display: block; background: var(--soft); border-radius: 10px; padding: 10px 12px }
+.auth-why .ico { vertical-align: -3px; margin-right: 4px }
+.pending { align-items: flex-start }
+.pend-ico { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: #14201B }
+.pend-ico.rejected, .pend-ico.none { background: var(--soft) }
+.pend-ico .ico { width: 26px; height: 26px }
+.pend-ico.pending .ico { animation: pulse 1.8s infinite }
+.stack { display: flex; flex-direction: column; gap: 10px; width: 100% }
+.account-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 28px; padding-top: 14px; border-top: 1px dashed var(--line); color: var(--muted); font-size: 14px }
+.account-foot span { display: inline-flex; gap: 6px; align-items: center }
+.accounts { display: flex; flex-direction: column; gap: 14px }
+.acc-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center }
+.switch { display: flex; gap: 12px; align-items: flex-start; max-width: 460px; cursor: pointer; border: 1px solid var(--line); border-radius: 14px; padding: 12px }
+.switch.on { border-color: #F2C14E }
+.switch input { accent-color: var(--lime); width: 20px; height: 20px; margin-top: 2px }
+.switch span { display: flex; flex-direction: column; gap: 3px }
+.switch small { color: var(--muted) }
+.switch.on small { color: #F2C14E }
+.req-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px }
+.req { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px }
+.req.pending { border-color: var(--lime) }
+.req-who { display: flex; flex-direction: column }
+.req-who b { font: 700 16px var(--display) }
+.req-who span { color: var(--muted); font-size: 13.5px; overflow-wrap: anywhere }
+.req-note { margin: 0; font-style: italic; color: #C8D5CD; font-size: 14px }
+.req-meta { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12.5px }
+.ops .pill.pending { background: var(--lime); color: #14201B } .ops .pill.approved { background: #2BA35E; color: #fff } .ops .pill.rejected { background: #7A3526; color: #fff }
+.panel.acc-top { flex-direction: row; align-items: center; text-align: left }
+.acc-top h3 { display: flex; gap: 8px; align-items: center }
+.req-meta { gap: 8px }

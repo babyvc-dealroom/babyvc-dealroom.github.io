@@ -61,7 +61,7 @@ const FIX_ACTIONS = ['lock_joins', 'unlock_joins', 'reset_attempts', 'purge'];
 
 function Console({ onExit }) {
   const { L, lx } = useLang();
-  const [ops, setOps] = useState(null); const [err, setErr] = useState('');
+  const [ops, setOps] = useState(null); const [err, setErr] = useState(''); const [acc, setAcc] = useState(null);
   const [srv, setSrv] = useState({ lat: null, at: 0, down: 0 });
   const [tab, setTab] = useState('issues');
   const [fix, setFix] = useState(null); const [guide, setGuide] = useState(null); const [device, setDevice] = useState(null);
@@ -70,7 +70,7 @@ function Console({ onExit }) {
   const load = useCallback(async () => {
     const t0 = Date.now();
     try {
-      const o = await api.opsSnapshot(); const t1 = Date.now();
+      const [o, a] = await Promise.all([api.opsSnapshot(), api.opsAccounts().catch(() => null)]); const t1 = Date.now(); setAcc(a);
       net.clock(o.now, t0, t1); setOps(o); setErr(''); setSrv({ lat: t1 - t0, at: t1, down: 0 });
     } catch (x) {
       if (x.message.includes('OPS_ONLY')) { onExit(); return; }
@@ -84,14 +84,15 @@ function Console({ onExit }) {
   }, [load]);
   const act = async (kind, gameId, arg) => { await api.opsAction(kind, gameId, arg); await load(); };
   const now = serverNow();
-  const issues = useMemo(() => (ops ? diagnose(ops, now) : []), [ops]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pending = (acc?.requests || []).filter(r => r.status === 'pending').length;
+  const issues = useMemo(() => (ops ? [...diagnose(ops, now), ...(pending ? [{ id: 'pending', kind: 'pending_requests', sev: 'info', count: pending }] : [])] : []), [ops, pending]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!ops) return <div className="ops-body">{err ? <ServerDown err={err} onRetry={load} /> : <div className="loading"><span className="spark" /></div>}</div>;
 
   const live = ops.games.filter(x => x.game.phase !== 'ended');
   const devices = live.flatMap(x => x.members);
   const online = devices.filter(m => deviceState(m, now) === 'online').length;
   const count = s => issues.filter(x => x.sev === s).length;
-  const tabs = [['issues', 'alert', L('Problemi', 'Problems'), issues.filter(x => x.sev !== 'info').length], ['games', 'users', L('Partite', 'Games'), live.length], ['sim', 'bug', L('Simula', 'Simulate')], ['guide', 'book', L('Guida ai problemi', 'Troubleshooting')], ['prep', 'shield', L('Prima della sessione', 'Before the session')]];
+  const tabs = [['issues', 'alert', L('Problemi', 'Problems'), issues.filter(x => x.sev !== 'info').length], ['games', 'users', L('Partite', 'Games'), live.length], ['accounts', 'key', L('Account', 'Accounts'), pending], ['sim', 'bug', L('Simula', 'Simulate')], ['guide', 'book', L('Guida ai problemi', 'Troubleshooting')], ['prep', 'shield', L('Prima della sessione', 'Before the session')]];
 
   return (
     <div className="ops-body">
@@ -105,7 +106,7 @@ function Console({ onExit }) {
       {srv.down > 0 && <ServerDown err={err} onRetry={load} compact />}
 
       <nav className="tabs ops-tabs" role="tablist">
-        {tabs.map(([id, ic, t, n]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}><Icon name={ic} /><span>{t}</span>{n ? <em className={'count' + (id === 'issues' ? '' : ' n')}>{n}</em> : null}</button>)}
+        {tabs.map(([id, ic, t, n]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}><Icon name={ic} /><span>{t}</span>{n ? <em className={'count' + (id === 'issues' || id === 'accounts' ? '' : ' n')}>{n}</em> : null}</button>)}
       </nav>
 
       {tab === 'issues' && (issues.length
@@ -114,6 +115,7 @@ function Console({ onExit }) {
 
       {tab === 'games' && <div className="ops-games">{ops.games.length ? ops.games.map(x => <GameCard key={x.game.id} x={x} now={now} act={act} onDevice={setDevice} say={say} />) : <p className="empty">{L('Nessuna partita negli ultimi 30 giorni.', 'No games in the last 30 days.')}</p>}</div>}
 
+      {tab === 'accounts' && <Accounts acc={acc} reload={load} say={say} />}
       {tab === 'sim' && <Simulator ops={ops} reload={load} say={say} />}
 
       {tab === 'guide' && (
@@ -291,6 +293,41 @@ function Prep({ ops, srv, act, say }) {
       <div className="panel"><h3><Icon name="clipboard" /> {L('Da controllare tu', 'For you to check')}</h3>
         <ul className="checks manual">{MANUAL.map(([k, t, d]) => <li key={k} className={done[k] ? 'yes' : ''}><label><input type="checkbox" checked={!!done[k]} onChange={() => tick(k)} /><b>{L(...t)}</b></label><small>{L(...d)}</small></li>)}</ul>
       </div>
+    </div>
+  );
+}
+
+// Who may run games: account requests, approve or turn down, and the auto-approve switch.
+function Accounts({ acc, reload, say }) {
+  const { L, lang } = useLang();
+  if (!acc) return <div className="loading"><span className="spark" /></div>;
+  const act = async (kind, id, msg) => { await api.opsAccountAction(kind, id); await reload(); if (msg) say(msg); };
+  const label = { pending: L('in attesa', 'waiting'), approved: L('approvato', 'approved'), rejected: L('rifiutato', 'turned down') };
+  return (
+    <div className="accounts">
+      <div className="panel acc-top">
+        <div><h3><Icon name="key" /> {L('Chi può organizzare partite', 'Who can run games')}</h3>
+          <p className="hint">{acc.organisers} {L('organizzatori abilitati', 'organisers enabled')} · {L('massimo', 'at most')} {acc.maxLiveGames} {L('partite in corso a testa', 'running games each')}</p></div>
+        <label className={'switch' + (acc.openSignup ? ' on' : '')}>
+          <input type="checkbox" checked={acc.openSignup} onChange={() => act(acc.openSignup ? 'close_signup' : 'open_signup', null, acc.openSignup ? L('Approvazione manuale riattivata.', 'Manual approval back on.') : L('Approvazione automatica attiva.', 'Auto-approve on.'))} />
+          <span><b>{L('Approva automaticamente i nuovi account', 'Approve new accounts automatically')}</b>
+            <small>{acc.openSignup ? L('Attenzione: chiunque crei un account vede subito le soluzioni del caso, anche un giocatore durante una sessione.', 'Careful: anyone who creates an account sees the case solutions at once, even a player during a session.') : L('Spento: approvi tu ogni richiesta. Consigliato.', 'Off: you approve each request. Recommended.')}</small></span>
+        </label>
+      </div>
+      {!acc.requests.length && <p className="empty">{L('Nessuna richiesta negli ultimi 30 giorni.', 'No requests in the last 30 days.')}</p>}
+      <ul className="req-list">
+        {acc.requests.map(r => (
+          <motion.li layout key={r.user_id} className={'req ' + r.status}>
+            <div className="req-who"><b>{r.name || '—'}</b><span>{r.email}</span>{r.org && <span>{r.org}</span>}</div>
+            {r.note && <p className="req-note">«{r.note}»</p>}
+            <div className="req-meta"><span className={'pill ' + r.status}>{label[r.status]}</span><time>{new Date(r.created_at).toLocaleString(lang, { dateStyle: 'short', timeStyle: 'short' })}</time></div>
+            <div className="row">
+              {r.status !== 'approved' && <button type="button" className="btn sign small" onClick={() => act('approve', r.user_id, L('Account approvato: può creare partite.', 'Account approved: it can create games.'))}><Icon name="check" /> {L('Approva', 'Approve')}</button>}
+              {r.status === 'pending' && <button type="button" className="btn small" onClick={() => act('reject', r.user_id, L('Richiesta rifiutata.', 'Request turned down.'))}><Icon name="x" /> {L('Rifiuta', 'Turn down')}</button>}
+              {r.status === 'approved' && <ConfirmButton className="btn ghost danger small" armedLabel={L('Togliere l\'accesso?', 'Remove access?')} onConfirm={() => act('reject', r.user_id, L('Accesso tolto.', 'Access removed.'))}>{L('Togli l\'accesso', 'Remove access')}</ConfirmButton>}
+            </div>
+          </motion.li>))}
+      </ul>
     </div>
   );
 }

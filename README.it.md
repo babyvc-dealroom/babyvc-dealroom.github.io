@@ -25,7 +25,7 @@ I founder vedono il primo term sheet quando conta di più. Gli investitori impar
 
 | Chi | Dove | Con cosa |
 |---|---|---|
-| Owner / game master | «Area organizzatori» | email + password, solo se l'email è nella lista `organisers` |
+| Game master | «Organizza una partita» | un account gratuito (nome, email, password), approvato dall'owner nella console |
 | Facilitator | pagina iniziale | codice partita + PIN del suo tavolo (vede solo quel tavolo) |
 | Squadra | pagina iniziale | codice partita + PIN della squadra, oppure il QR della join card |
 | Proiettore | pulsante del game master | la sessione del game master |

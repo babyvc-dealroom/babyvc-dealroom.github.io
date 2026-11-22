@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const sb = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
-const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+const ok = ({ data, error }) => { if (error) throw new Error([error.message, error.details].filter(Boolean).join(' ')); return data; };
 const uid = async () => (await sb.auth.getSession()).data.session?.user;
 
 export const api = {
@@ -17,10 +17,30 @@ export const api = {
   },
   async organiserSignIn(email, password) {
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) throw new Error('BAD_LOGIN');
-    if (!(await api.isOrganiser())) { await sb.auth.signOut(); throw new Error('NOT_ORGANISER'); }
+    if (error) throw new Error(/confirm/i.test(error.message) ? 'EMAIL_NOT_CONFIRMED' : 'BAD_LOGIN');
     return { ok: true };
   },
+  // A new organiser account. It can create games once the platform owner approves it (or at once, with auto-approve on).
+  async organiserSignUp({ email, password, name, org, note }) {
+    const cur = await uid();
+    if (cur?.is_anonymous) await sb.auth.signOut({ scope: 'local' });
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+    if (error) {
+      const m = error.message || '';
+      throw new Error(error.status === 429 || /rate limit/i.test(m) ? 'SIGNUP_LIMIT' : /registered|exists/i.test(m) ? 'EMAIL_TAKEN'
+        : /password/i.test(m) ? 'WEAK_PASSWORD' : /disabled|not allowed/i.test(m) ? 'SIGNUP_CLOSED' : m);
+    }
+    if (!data.session) throw new Error('CONFIRM_EMAIL_ON');   // the project still asks for email confirmation: see docs/deploy.md
+    return ok(await sb.rpc('request_organiser', { p_name: name, p_org: org || '', p_note: note || '' }));
+  },
+  async organiserStatus() {
+    const u = await uid(); if (!u || u.is_anonymous) return { status: 'none' };
+    return { status: ok(await sb.rpc('organiser_status')), email: u.email };
+  },
+  async requestOrganiser({ name, org, note }) { return ok(await sb.rpc('request_organiser', { p_name: name, p_org: org || '', p_note: note || '' })); },
+  async deleteMyAccount() { ok(await sb.rpc('delete_my_account')); await sb.auth.signOut({ scope: 'local' }); },
+  async opsAccounts() { return ok(await sb.rpc('ops_accounts')); },
+  async opsAccountAction(kind, userId = null) { ok(await sb.rpc('ops_account_action', { p_kind: kind, p_user: userId })); },
   async signOut() { await sb.auth.signOut(); },
   async myGames() {
     const u = await uid(); if (!u) return [];

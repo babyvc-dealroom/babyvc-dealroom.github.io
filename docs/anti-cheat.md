@@ -33,7 +33,8 @@ All of this is implemented in `supabase/migrations/0001_init.sql`:
 | …from a private window or a second phone (a new identity) | Joins lock themselves when round 1 starts (`JOINS_LOCKED`): only devices already in the game can come back. The game master reopens them in one click for a latecomer. |
 | Guessing PINs | 8 wrong PINs per device in 10 minutes, 60 per game, then `TOO_MANY_ATTEMPTS`. A PIN has 32⁵ ≈ 33 million combinations. Attempts are logged and shown in the ops console. |
 | Renaming your squad mid-game to confuse the leaderboard | Players rename only in the lobby; the game master always. |
-| Becoming facilitator or game master | Facilitator PINs are per table and only unlock that table. Creating games requires an email + password account on the `organisers` allow-list. No PIN ever grants game master rights. |
+| Becoming facilitator or game master | Facilitator PINs are per table and only unlock that table. No PIN ever grants game master rights. |
+| Opening an organiser account during a session to read the solutions | Anyone can create an account, but it can create games (and so see solutions and cards) only after the owner approves it in `/easteregg` → Accounts. Auto-approve exists and is off by default, with a warning. |
 | Sending a forged offer (absurd values, extra clauses, missing levers) | `bvc_valid_terms()` accepts only the round's three levers, inside the public slider ranges, with integer option indexes. |
 | Signing your own offer, or the other squad's on its behalf | `accept_offer()` only accepts an open offer from the other squad of your own table, in the current round and phase. |
 | Peeking at other tables' deals to anchor | Other tables' results are hidden until the debrief; the «signed» announcement carries no terms. |

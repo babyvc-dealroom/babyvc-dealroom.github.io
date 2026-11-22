@@ -11,3 +11,4 @@ sleep 1
 OPS_PASSWORD=e2e-console-password python3 tests/e2e/game.py
 OPS_PASSWORD=e2e-console-password python3 tests/e2e/resilience.py
 python3 tests/e2e/resume.py
+OPS_PASSWORD=e2e-console-password python3 tests/e2e/accounts.py
