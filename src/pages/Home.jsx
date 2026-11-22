@@ -130,11 +130,6 @@ export default function Home() {
             <motion.p className="lede" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
               {L('Un gioco per aule, bootcamp e acceleratori. Squadre di founder e di investitori portano una startup dal pre-seed alla Series A: ogni clausola firmata cambia il cap table dei round successivi, fino all\'exit.', 'A game for classrooms, bootcamps and accelerators. Squads of founders and investors take a startup from pre-seed to Series A: every clause they sign changes the cap table of the next rounds, all the way to the exit.')}
             </motion.p>
-            <ul className="facts">
-              {[['clock', L('2 ore', '2 hours')], ['users', L('da 2 a 20 tavoli', '2 to 20 tables')], ['screen', L('dal telefono', 'on a phone')], ['book', L('italiano e inglese', 'Italian and English')]].map(([ic, t], i) => (
-                <motion.li key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 + i * 0.06 }}><Icon name={ic} />{t}</motion.li>
-              ))}
-            </ul>
             <div className="cta-row">
               <button type="button" className="btn primary big only-mobile" onClick={toJoin}><Icon name="key" /> {L('Ho un codice', 'I have a code')}</button>
               <button type="button" className="btn big" onClick={() => go(playRef)}><Icon name="play" /> {L('Prova in 30 secondi', 'Try it in 30 seconds')}</button>
