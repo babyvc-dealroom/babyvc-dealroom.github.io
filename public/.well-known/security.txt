@@ -1,0 +1,5 @@
+# Found a vulnerability? Please report it privately, not in a public issue. See SECURITY.md.
+Contact: https://github.com/babyvc-dealroom/babyvc-dealroom.github.io/security/advisories/new
+Expires: 2027-11-18T00:00:00.000Z
+Preferred-Languages: it, en
+Policy: https://github.com/babyvc-dealroom/babyvc-dealroom.github.io/blob/main/SECURITY.md

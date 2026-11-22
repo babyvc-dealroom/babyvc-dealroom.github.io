@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-demo
+.env
+.env.local
+.env*.local
+
+# Confidential scenario packs and anything generated from them
+scenarios/*/private.js
+supabase/seed_content.sql
